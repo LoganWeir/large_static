@@ -1,0 +1,12 @@
+#ignore all DS_Store
+/*/.DS_Store
+/*/*/.DS_Store
+
+#ignore all GEOJSON files (too big)
+/*/*.geojson
+
+#ignore all output directories
+/*/output
+
+#ignore all input directories
+/*/input 
