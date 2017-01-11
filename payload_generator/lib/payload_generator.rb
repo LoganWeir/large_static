@@ -46,59 +46,59 @@ end
 
 
 
-# Import all parameters for the generator
-seed_parameters = JSON.parse(File.read('seed_parameters.json'))
+# # Import all parameters for the generator
+# seed_parameters = JSON.parse(File.read('seed_parameters.json'))
 
 
-map_data = []
-# Allows for multiple files to be processed
-ARGV.each do | item |
-	raw_data = JSON.parse(File.read(item))
-	for feature in raw_data['features']
-		# Set filter target
-		filter_target = feature['properties']['LIQ']
-		# Separate with ternary operator
-		seed_parameters['filter_parameters'].include?(filter_target) ? \
-			next : map_data << feature
-	end
-end
+# map_data = []
+# # Allows for multiple files to be processed
+# ARGV.each do | item |
+# 	raw_data = JSON.parse(File.read(item))
+# 	for feature in raw_data['features']
+# 		# Set filter target
+# 		filter_target = feature['properties']['LIQ']
+# 		# Separate with ternary operator
+# 		seed_parameters['filter_parameters'].include?(filter_target) ? \
+# 			next : map_data << feature
+# 	end
+# end
 
-zoom_hash = seed_parameters['zoom_parameters']
-
-
-# Setup RGeo factory for handling geographic data
-# Uses projection for calculations
-# Converts area/distance calculations to meters (75% sure)
-factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
+# zoom_hash = seed_parameters['zoom_parameters']
 
 
-# Begin iterating through data
-map_data.each.with_index(1) do |item, index|
-
-	# Good for monitoring progress
-	puts "Starting item ##{index}! Left to go: #{(map_data.length - index)}"
-
-	# Convert data into RGeo, then proper factory
-	rgeo_hash = RGeo::GeoJSON.decode(item['geometry'])
-	geo_data_projection = factory.collection([rgeo_hash])
+# # Setup RGeo factory for handling geographic data
+# # Uses projection for calculations
+# # Converts area/distance calculations to meters (75% sure)
+# factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
 
-	zoom_hash.each do |zoom_level, zoom_params|
+# # Begin iterating through data
+# map_data.each.with_index(1) do |item, index|
 
-		if payload_array.include? zoom_level
-			# I can probably turn this into a function
-			for box in ready_bboxes[zoom_level]['boxes']
-				if geo_data_projection[0].intersects?(box['rgeo_box'])
-					box['intersections'] << geo_data_projection[0]
-				end
-			end
-		end
-	end
-end
+# 	# Good for monitoring progress
+# 	puts "Starting item ##{index}! Left to go: #{(map_data.length - index)}"
+
+# 	# Convert data into RGeo, then proper factory
+# 	rgeo_hash = RGeo::GeoJSON.decode(item['geometry'])
+# 	geo_data_projection = factory.collection([rgeo_hash])
 
 
-payload_output.write(ready_bboxes.to_json) unless payload_output.nil?
+# 	zoom_hash.each do |zoom_level, zoom_params|
 
-payload_output.close unless payload_output.nil?
+# 		if payload_array.include? zoom_level
+# 			# I can probably turn this into a function
+# 			for box in ready_bboxes[zoom_level]['boxes']
+# 				if geo_data_projection[0].intersects?(box['rgeo_box'])
+# 					box['intersections'] << geo_data_projection[0]
+# 				end
+# 			end
+# 		end
+# 	end
+# end
 
-puts "\a"
+
+# payload_output.write(ready_bboxes.to_json) unless payload_output.nil?
+
+# payload_output.close unless payload_output.nil?
+
+# puts "\a"
