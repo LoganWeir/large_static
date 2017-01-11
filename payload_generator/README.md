@@ -1,5 +1,3 @@
-Requirement - Large GeoJson dataset which requires reduction
-
 This is where sample json payloads are built!
 
 Each payload is a set of raw polygons that all intersect with a bounding box.
