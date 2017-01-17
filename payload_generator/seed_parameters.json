@@ -1,16 +1,11 @@
-// This is were Layer Parameters are set
-// The below example from the Liquifaction layer is included for reference
+{
+  "filter_parameters": ["", null, "ANI", "NP", "OW", "D", "OPEN WATER", "AREA NOT INCLUDED"]
+}
 
 
 // {
-// 	"filter_parameters": ["", null, "NM", "W", "VL"],
-// 	"color_parameters" : {
-// 	"VL": "#fee5d9",
-// 	"L": "#fcae91",
-// 	"M": "#fb6a4a",
-// 	"H": "#de2d26",
-// 	"VH": "#a50f15"
-// 	},
+// 	"filter_parameters": ["", null, "ANI", "NP", "OW", "D", "OPEN WATER", "AREA NOT INCLUDED"]
+// }
 // 	"zoom_parameters": {
 // 		"8": {
 // 			"feature_skip": ["VL"],
@@ -74,3 +69,6 @@
 // 		}
 // 	}
 // }
+
+
+

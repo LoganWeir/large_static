@@ -43,25 +43,32 @@ else
 
 end
 
+other_raw_data = JSON.parse(File.read(ARGV[0]))
+
+puts other_raw_data.length
 
 
 
-# # Import all parameters for the generator
-# seed_parameters = JSON.parse(File.read('seed_parameters.json'))
+# Import all parameters for the generator
+seed_parameters = JSON.parse(File.read('seed_parameters.json'))
+
+map_data = []
 
 
-# map_data = []
-# # Allows for multiple files to be processed
-# ARGV.each do | item |
-# 	raw_data = JSON.parse(File.read(item))
-# 	for feature in raw_data['features']
-# 		# Set filter target
-# 		filter_target = feature['properties']['LIQ']
-# 		# Separate with ternary operator
-# 		seed_parameters['filter_parameters'].include?(filter_target) ? \
-# 			next : map_data << feature
-# 	end
-# end
+# Allows for multiple files to be processed
+ARGV.each do | item |
+	raw_data = JSON.parse(File.read(item))
+	for feature in raw_data
+		# Set filter target
+		filter_target = feature['properties']['FLD_ZONE']
+		# Separate with ternary operator
+		seed_parameters['filter_parameters'].include?(filter_target) ? \
+			next : map_data << feature
+	end
+end
+
+
+puts map_data.length
 
 # zoom_hash = seed_parameters['zoom_parameters']
 
