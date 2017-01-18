@@ -35,6 +35,7 @@ seed_parameters = JSON.parse(File.read('seed_parameters.json'))
 
 zoom_parameters = seed_parameters['zoom_parameters']
 
+
 # Setup RGeo factory for handling geographic data
 # Uses projection for calculations
 # Converts area/distance calculations to meters (75% sure)
@@ -43,6 +44,11 @@ factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
 
 # Preparing Hash for Testing
+# For each zoom level, assembles the bounding boxes and the polygons that instersect them
+
+puts "Building Testing Hash"
+puts ""
+
 testing_hash = {}
 for zoom_level, zoom_value in zoom_bboxes_intersections
 	testing_hash[zoom_level] = {}
@@ -56,6 +62,7 @@ for zoom_level, zoom_value in zoom_bboxes_intersections
 		testing_hash[zoom_level]['boxes'] << box_hash
 	end
 end
+
 
 
 # Output
@@ -120,7 +127,8 @@ for zoom_level, zoom_contents in testing_hash
 
 
 
-
+	puts "Starting first Simplification"
+	puts ""
 
 	# Filter Holes, Filter Small Polygons, Simplify Polygon in Each Box
 	first_simplification = box_simplifier(simplify_ratio,
@@ -135,6 +143,8 @@ for zoom_level, zoom_contents in testing_hash
 	puts "Average BBox-Chopped Polygon Point Length: #{average_point_length[0]}"
 	puts "Max BBox-Chopped Polygon Point Length: #{average_point_length[1]}"
 
+	puts "\a"
+	
 	attempts = 0
 
 	while current_payload_average > 1

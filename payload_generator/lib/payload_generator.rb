@@ -43,10 +43,6 @@ else
 
 end
 
-other_raw_data = JSON.parse(File.read(ARGV[0]))
-
-puts other_raw_data.length
-
 
 
 # Import all parameters for the generator
@@ -68,44 +64,90 @@ ARGV.each do | item |
 end
 
 
-puts map_data.length
-
-# zoom_hash = seed_parameters['zoom_parameters']
+zoom_hash = seed_parameters['zoom_parameters']
 
 
-# # Setup RGeo factory for handling geographic data
-# # Uses projection for calculations
-# # Converts area/distance calculations to meters (75% sure)
-# factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
+# Setup RGeo factory for handling geographic data
+# Uses projection for calculations
+# Converts area/distance calculations to meters (75% sure)
+factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
 
-# # Begin iterating through data
-# map_data.each.with_index(1) do |item, index|
-
-# 	# Good for monitoring progress
-# 	puts "Starting item ##{index}! Left to go: #{(map_data.length - index)}"
-
-# 	# Convert data into RGeo, then proper factory
-# 	rgeo_hash = RGeo::GeoJSON.decode(item['geometry'])
-# 	geo_data_projection = factory.collection([rgeo_hash])
+# # Used for testing
+# test_data = map_data[0..500]
 
 
-# 	zoom_hash.each do |zoom_level, zoom_params|
+# Begin iterating through data
+map_data.each.with_index(1) do |item, index|
 
-# 		if payload_array.include? zoom_level
-# 			# I can probably turn this into a function
-# 			for box in ready_bboxes[zoom_level]['boxes']
-# 				if geo_data_projection[0].intersects?(box['rgeo_box'])
-# 					box['intersections'] << geo_data_projection[0]
-# 				end
-# 			end
-# 		end
-# 	end
-# end
+	# Good for monitoring progress
+	puts "Starting item ##{index}! Left to go: #{(map_data.length - index)}"
+
+	# Get Flood Zone for Feature Filtering
+	flood_zone = item['properties']['FLD_ZONE']
+	sub_type = item['properties']['ZONE_SUBTY']
+	complete_fld_type = [flood_zone, sub_type].join(", ")
+
+	# Convert data into RGeo, then proper factory
+	rgeo_hash = RGeo::GeoJSON.decode(item['geometry'])
+	geo_data_projection = factory.collection([rgeo_hash])
 
 
-# payload_output.write(ready_bboxes.to_json) unless payload_output.nil?
+	payload_array.each do |zoom_level|
 
-# payload_output.close unless payload_output.nil?
+		for box in ready_bboxes[zoom_level]['boxes']
 
-# puts "\a"
+			zoom_params = zoom_hash[zoom_level]
+			polygon = geo_data_projection[0]
+			bbox = box['rgeo_box']
+
+			if filter_intersect_test(polygon, bbox, zoom_params, complete_fld_type)
+				box['intersections'] << geo_data_projection[0]
+			end
+
+		end
+
+		# 	# Check for intersection, check for feature skip
+		# 	if filter_intersect_test(geo_data_projection[0], box['rgeo_box'], zoom_params)
+		# 		box['intersections'] << geo_data_projection[0]
+		# 	end
+
+		# 	# if geo_data_projection[0].intersects?(box['rgeo_box'])
+		# 	# 	box['intersections'] << geo_data_projection[0]
+		# 	# end
+
+		# end
+
+
+	end	
+
+	# zoom_hash.each do |zoom_level, zoom_params|
+
+	# 	if payload_array.include? zoom_level
+	# 		# I can probably turn this into a function
+
+	# 		for box in ready_bboxes[zoom_level]['boxes']
+
+	# 			# Check for intersection, check for feature skip
+	# 			if filter_intersect_test(geo_data_projection[0], box['rgeo_box'], zoom_params)
+	# 				box['intersections'] << geo_data_projection[0]
+	# 			end
+
+	# 			# if geo_data_projection[0].intersects?(box['rgeo_box'])
+	# 			# 	box['intersections'] << geo_data_projection[0]
+	# 			# end
+
+	# 		end
+	# 	end
+	# end
+
+
+
+end
+
+
+payload_output.write(ready_bboxes.to_json) unless payload_output.nil?
+
+payload_output.close unless payload_output.nil?
+
+puts "\a"

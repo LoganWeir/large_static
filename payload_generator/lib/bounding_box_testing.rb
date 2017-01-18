@@ -44,3 +44,32 @@ def convert_bbox(box)
 	polygon = factory.polygon(linear_ring)
 	polygon
 end
+
+def filter_intersect_test(polygon, bbox, zoom_params, data_type)
+
+	testing = 0
+
+	unless polygon.intersects?(bbox)
+
+		testing += 1
+
+	end
+
+	if zoom_params['feature_skip'].include?(data_type)
+
+		testing += 1
+
+	end
+
+	if testing > 0
+
+		return false
+
+	else
+
+		return true
+
+	end
+
+
+end
