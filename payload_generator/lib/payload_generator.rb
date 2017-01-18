@@ -107,41 +107,7 @@ map_data.each.with_index(1) do |item, index|
 
 		end
 
-		# 	# Check for intersection, check for feature skip
-		# 	if filter_intersect_test(geo_data_projection[0], box['rgeo_box'], zoom_params)
-		# 		box['intersections'] << geo_data_projection[0]
-		# 	end
-
-		# 	# if geo_data_projection[0].intersects?(box['rgeo_box'])
-		# 	# 	box['intersections'] << geo_data_projection[0]
-		# 	# end
-
-		# end
-
-
 	end	
-
-	# zoom_hash.each do |zoom_level, zoom_params|
-
-	# 	if payload_array.include? zoom_level
-	# 		# I can probably turn this into a function
-
-	# 		for box in ready_bboxes[zoom_level]['boxes']
-
-	# 			# Check for intersection, check for feature skip
-	# 			if filter_intersect_test(geo_data_projection[0], box['rgeo_box'], zoom_params)
-	# 				box['intersections'] << geo_data_projection[0]
-	# 			end
-
-	# 			# if geo_data_projection[0].intersects?(box['rgeo_box'])
-	# 			# 	box['intersections'] << geo_data_projection[0]
-	# 			# end
-
-	# 		end
-	# 	end
-	# end
-
-
 
 end
 

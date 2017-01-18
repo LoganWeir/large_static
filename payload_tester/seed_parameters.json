@@ -5,7 +5,7 @@
   "filter_parameters": ["", null, "ANI", "NP", "OW", "D", "OPEN WATER", "AREA NOT INCLUDED"],
   "zoom_parameters": {
     // Second 8 - Increasing Simplication to 0.01, Removing Low Flood Risk
-    // 
+    // Payload size was not lowered by any significant amount
     "8": {
       "feature_skip": [],
       "minimum_hole_size": 500000.0,
