@@ -8,13 +8,8 @@
     // Payload size was not lowered by any significant amount
     "8": {
       "feature_skip": [],
-      "minimum_hole_size": 500000.0,
-      "simplification": 0.01,
-      "size_fill_limits": {
-        "0.5": 1000000,
-        "0.25": 3000000,
-        "0": 5000000
-      }
+      "minimum_poly_bbox_ratio": 10e-06,
+      "simplification": 0.05
     }
   }
   //   // First 8 from Liquifaction
