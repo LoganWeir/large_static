@@ -10,11 +10,14 @@ require 'rgeo'
 require 'pry'
 
 require 'bounding_box_testing'
+require 'sample_generator'
 
 # # Set options outside of ARGV
 opts = Trollop::options do
   opt :payload_testing, "Payload Testing", 
   	default: nil, short: 'p', type: String
+  opt :sample_size, "Sample Size",
+  	default: nil, short: 's', type: Integer
 end
 
 
@@ -48,8 +51,8 @@ end
 # Import all parameters for the generator
 seed_parameters = JSON.parse(File.read('seed_parameters.json'))
 
-map_data = []
-
+# Where data will be assembled
+layer_data = []
 
 # Allows for multiple files to be processed
 ARGV.each do | item |
@@ -59,7 +62,7 @@ ARGV.each do | item |
 		filter_target = feature['properties']['FLD_ZONE']
 		# Separate with ternary operator
 		seed_parameters['filter_parameters'].include?(filter_target) ? \
-			next : map_data << feature
+			next : layer_data << feature
 	end
 end
 
@@ -73,15 +76,24 @@ zoom_hash = seed_parameters['zoom_parameters']
 factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
 
-# # Used for testing
-# test_data = map_data[0..500]
+
+
+if opts[:sample_size]
+
+	working_data = sample_generator(layer_data, opts[:sample_size])
+
+else
+
+	working_data = layer_data
+
+end
 
 
 # Begin iterating through data
-map_data.each.with_index(1) do |item, index|
+working_data.each.with_index(1) do |item, index|
 
 	# Good for monitoring progress
-	puts "Starting item ##{index}! Left to go: #{(map_data.length - index)}"
+	puts "Starting item ##{index}! Left to go: #{(working_data.length - index)}"
 
 	# Get Flood Zone for Feature Filtering
 	flood_zone = item['properties']['FLD_ZONE']
@@ -91,7 +103,6 @@ map_data.each.with_index(1) do |item, index|
 	# Convert data into RGeo, then proper factory
 	rgeo_hash = RGeo::GeoJSON.decode(item['geometry'])
 	geo_data_projection = factory.collection([rgeo_hash])
-
 
 	payload_array.each do |zoom_level|
 
@@ -103,6 +114,7 @@ map_data.each.with_index(1) do |item, index|
 
 			if filter_intersect_test(polygon, bbox, zoom_params, complete_fld_type)
 				box['intersections'] << geo_data_projection[0]
+
 			end
 
 		end

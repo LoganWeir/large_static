@@ -2,7 +2,7 @@
   "filter_parameters": ["", null, "ANI", "NP", "OW", "D", "OPEN WATER", "AREA NOT INCLUDED"],
   "zoom_parameters": {
     "8": {
-      "feature_skip": ["X, AREA OF MINIMAL FLOOD HAZARD"],
+      "feature_skip": ["X, AREA OF MINIMAL FLOOD HAZARD", "X, 0.2 PCT ANNUAL CHANCE FLOOD HAZARD"],
       "minimum_hole_size": 500000.0,
       "simplification": 0.1,
       "size_fill_limits": {

@@ -45,6 +45,7 @@ def convert_bbox(box)
 	polygon
 end
 
+
 def filter_intersect_test(polygon, bbox, zoom_params, data_type)
 
 	testing = 0
