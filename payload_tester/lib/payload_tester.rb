@@ -9,231 +9,295 @@ require 'rgeo'
 # For pretty printing, if needed
 require 'pry'
 
+
 require 'bounding_box_testing'
 require 'test_builder'
+require 'single_test'
+
+
+# !OPTIONS FOR EXECUTION
+# single - payload size test for each bounding box/poly set with parameters
+# trim - after initial test, trim payload to size set in function argument
+# layer - build test layer from final payload. zoom level and box set in function argument
+
+
+# TO ADD LATER
+# small - create a layer of the largest polygons beneath the size threshold
+
+
 
 
 
 # Set options outside of ARGV
 opts = Trollop::options do
-  opt :parameter_output, "Parameter Output", default: nil, 
-  	short: 'p', type: String
-  opt :layer_output, "Layer Output", default: nil,
+  opt :trim, "Trim to Size", default: nil,
+  	short: 't', type: String
+  opt :layer, "Generate Layer", default: nil,
   	short: 'l', type: String
 end
 
+if ARGV.length == 0
 
-
-
-# Only produce output file if asked for it
-if opts[:parameter_output].nil? && opts[:layer_output].nil?
-
-	output = nil
-
-elsif opts[:layer_output].nil?
-
-	path_file = 'output/' + opts[:parameter_output]
-	output = open(path_file, 'w')
-
-elsif opts[:parameter_output].nil?
-
-	path_file = 'output/' + opts[:layer_output]
-	output = open(path_file, 'w')
+	raise ArgumentError, "Please include test payload(s)"
 
 else
 
-	puts "Output unclear"
+	# Get bounding boxes and their intersecting polygons
+	raw_payloads = JSON.parse(File.read(ARGV[0]))
 
 end
 
-
-# Get bounding boxes and their intersecting polygons
-zoom_bboxes_intersections = JSON.parse(File.read(ARGV[0]))
-
-# Get the simpliciation parameters
+# Get Parameters
 seed_parameters = JSON.parse(File.read('seed_parameters.json'))
 zoom_parameters = seed_parameters['zoom_parameters']
 
 
-# Setup RGeo factory for handling geographic data
-# Uses projection for calculations
-# Converts area/distance calculations to meters (75% sure)
-factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
 
-# Preparing Hash for Testing
-puts "Building Testing Hash"
-puts ""
 
-testing_hash = {}
 
 
-# For each zoom level tested
-for zoom_level, zoom_value in zoom_bboxes_intersections
 
-	testing_hash[zoom_level] = {}
 
-	# Gather Bounding Box Meta Data
-	testing_hash[zoom_level]['settings'] = zoom_parameters[zoom_level]
-	testing_hash[zoom_level]['average_box_area'] = zoom_value['average_area']
 
-	# Zoom Parameters
-	zoom_params = zoom_parameters[zoom_level]
 
-	#Get simplifaction reduction percentage 
-	simplification = zoom_params['simplification']
 
-	# Create array of hashes, where each hash is a bound box and polygons
-	testing_hash[zoom_level]['boxes'] = []
 
-	for box in zoom_value['boxes']
 
-		box_hash = {}
+# if opts[:execution] == "single_test"
 
-		# Convert Bounding Box to RGEO
-		bounding_box = factory.parse_wkt(box['rgeo_box'])
-		box_hash['bbox'] = factory.parse_wkt(box['rgeo_box'])
+# 	puts "Executing Single Test"
 
-		# Get BBox Area for Polygon Rating
-		bbox_area = bounding_box.area
+# elsif opts[:execution] == "single_test_layer"
 
-		# Ratio of BBox Size to Minimum Polygon Size
-		min_poly_bbox_ratio = zoom_params['minimum_poly_bbox_ratio']
+# 	puts "Executing Single Test, Building Layer"
 
-		# Minimum Polygon Size, Regardless of Fill
-		min_poly_size = bbox_area * min_poly_bbox_ratio
+# elsif opts[:execution] == "single_test_layer"
 
-		# Where polygons will get stored
-		box_hash['polygons'] = []
+# 	puts "Executing Single Test, Building Layer"
 
-		# Iterate though polygons
-		# Filter and Simplify on first iteration
-		for polygon in box['intersections']
+# elsif opts[:execution] == "single_test_layer"
 
-			# Format polygon
-			rgeo_poly = factory.parse_wkt(polygon)
+# 	puts "Executing Single Test, Building Layer"
 
-			# Establish polygon area
-			poly_area = rgeo_poly.area
+# else
 
-			# Filter out polygons that are too small
-			next if rgeo_poly.area <= min_poly_size
+# 	raise ArgumentError, "Please specify execution"
 
-			# Filter out holes in polygons that are too small
-			hole_filtered_poly = hole_filtering(min_poly_size, rgeo_poly, factory)
+# end
 
-			# Add simplification here
-			simplied_polygons = polygon_simplifier(hole_filtered_poly, 
-				simplification, min_poly_size)
 
-			for simple_polygon in simplied_polygons
 
-				if simple_polygon.area > min_poly_size
+  # opt :parameter_output, "Parameter Output", default: nil, 
+  # 	short: 'p', type: String
+  # opt :layer_output, "Layer Output", default: nil,
+  # 	short: 'l', type: String
 
-					# Grab Polygon
-					box_hash['polygons'] << simple_polygon
+# # Only produce output file if asked for it
+# if opts[:parameter_output].nil? && opts[:layer_output].nil?
 
-				else
+# 	output = nil
 
-					# !!!!!!! TEMPORARY PRINT
-					puts "Simplification made it too small"
+# elsif opts[:layer_output].nil?
 
-				end
+# 	path_file = 'output/' + opts[:parameter_output]
+# 	output = open(path_file, 'w')
 
-			end
+# elsif opts[:parameter_output].nil?
 
-		end
+# 	path_file = 'output/' + opts[:layer_output]
+# 	output = open(path_file, 'w')
 
-		testing_hash[zoom_level]['boxes'] << box_hash
+# else
 
-	end
+# 	puts "Output unclear"
 
-end
+# end
 
 
-# Jump back into array, get the length of each payload
-for zoom_level, zoom_value in testing_hash
 
-	puts "Zoom Level: #{zoom_level}\n"
 
-	for bbox_test in zoom_value['boxes']
+# # Get bounding boxes and their intersecting polygons
+# zoom_bboxes_intersections = JSON.parse(File.read(ARGV[0]))
 
-		polygons = bbox_test['polygons']
+# # Get the simpliciation parameters
+# seed_parameters = JSON.parse(File.read('seed_parameters.json'))
+# zoom_parameters = seed_parameters['zoom_parameters']
 
-		bbox = bbox_test['bbox']
 
-		payload_length = polychop_lentest(polygons, bbox)
+# # Setup RGeo factory for handling geographic data
+# # Uses projection for calculations
+# # Converts area/distance calculations to meters (75% sure)
+# factory = RGeo::Geographic.simple_mercator_factory(:srid => 4326)
 
-		puts "Payload Size: #{payload_length}"
 
-	end
+# # Preparing Hash for Testing
+# puts "Building Testing Hash"
+# puts ""
 
-end
+# testing_hash = {}
 
 
+# # For each zoom level tested
+# for zoom_level, zoom_value in zoom_bboxes_intersections
 
+# 	testing_hash[zoom_level] = {}
 
+# 	# Gather Bounding Box Meta Data
+# 	testing_hash[zoom_level]['settings'] = zoom_parameters[zoom_level]
+# 	testing_hash[zoom_level]['average_box_area'] = zoom_value['average_area']
 
+# 	# Zoom Parameters
+# 	zoom_params = zoom_parameters[zoom_level]
 
+# 	#Get simplifaction reduction percentage 
+# 	simplification = zoom_params['simplification']
 
-# Create file if asked to
-unless output == nil
+# 	# Create array of hashes, where each hash is a bound box and polygons
+# 	testing_hash[zoom_level]['boxes'] = []
 
-	if opts[:layer_output].nil?
+# 	for box in zoom_value['boxes']
 
-		output.write(size_parameters.to_json)
-		output.close
+# 		box_hash = {}
 
-	elsif opts[:testing_output].nil?
+# 		# Convert Bounding Box to RGEO
+# 		bounding_box = factory.parse_wkt(box['rgeo_box'])
+# 		box_hash['bbox'] = factory.parse_wkt(box['rgeo_box'])
 
-		# REQUIRES ARRAY OF POLYGONS EXTRACTED FROM TESTING HASH
-		target_polygons = testing_hash[8][0]['polygons']
+# 		# Get BBox Area for Polygon Rating
+# 		bbox_area = bounding_box.area
 
+# 		# Ratio of BBox Size to Minimum Polygon Size
+# 		min_poly_bbox_ratio = zoom_params['minimum_poly_bbox_ratio']
 
-		# Build a Map Layer for Testing
-		final_output = {}
+# 		# Minimum Polygon Size, Regardless of Fill
+# 		min_poly_size = bbox_area * min_poly_bbox_ratio
 
-		test_layer_build = layer_builder("Test Layer")
+# 		# Where polygons will get stored
+# 		box_hash['polygons'] = []
 
-		final_output['layer_data'] = test_layer_build[0]
+# 		# Iterate though polygons
+# 		# Filter and Simplify on first iteration
+# 		for polygon in box['intersections']
 
-		layer_id = test_layer_build[1]
+# 			# Format polygon
+# 			rgeo_poly = factory.parse_wkt(polygon)
 
-		feature_array = []
+# 			# Establish polygon area
+# 			poly_area = rgeo_poly.area
 
-		length_test = []
+# 			# Filter out polygons that are too small
+# 			next if rgeo_poly.area <= min_poly_size
 
-		for polygon in target_polygons
+# 			# Filter out holes in polygons that are too small
+# 			hole_filtered_poly = hole_filtering(min_poly_size, rgeo_poly, factory)
 
-				poly_params = {}
-				poly_params['id'] = layer_id
-				poly_params['title'] = "TEST MOTHER FUCKER"
-				poly_params['description'] = "DID YOU NOT HEAR ME?"
-				poly_params['color'] = "#de2d26"
-				poly_params['zoom'] = 8
+# 			# Add simplification here
+# 			simplied_polygons = polygon_simplifier(hole_filtered_poly, 
+# 				simplification, min_poly_size)
 
-				feature_array << feature_builder(poly_params, factory.collection([polygon]))
+# 			for simple_polygon in simplied_polygons
 
-		end
+# 				if simple_polygon.area > min_poly_size
 
-		final_output['feature_data'] = feature_array
+# 					# Grab Polygon
+# 					box_hash['polygons'] << simple_polygon
 
-		output.write(final_output.to_json)
-		output.close
+# 				end
 
-	else
+# 			end
 
-		puts "Output unclear"
+# 		end
 
-	end
+# 		testing_hash[zoom_level]['boxes'] << box_hash
 
-end
+# 	end
 
+# end
 
 
-puts "\a"
-puts "\a"
-puts "\a"
+# # Jump back into array, get the length of each payload
+# for zoom_level, zoom_value in testing_hash
+
+# 	puts "Zoom Level: #{zoom_level}\n"
+
+# 	for bbox_test in zoom_value['boxes']
+
+# 		polygons = bbox_test['polygons']
+
+# 		bbox = bbox_test['bbox']
+
+# 		payload_length = polychop_lentest(polygons, bbox)
+
+# 		puts "Payload Size: #{payload_length}"
+
+# 	end
+
+# end
+
+
+
+
+
+
+
+# # Create file if asked to
+# unless output == nil
+
+# 	if opts[:layer_output].nil?
+
+# 		output.write(size_parameters.to_json)
+# 		output.close
+
+# 	elsif opts[:testing_output].nil?
+
+# 		# REQUIRES ARRAY OF POLYGONS EXTRACTED FROM TESTING HASH
+# 		target_polygons = testing_hash['9']['boxes'][0]['polygons']
+
+# 		# Build a Map Layer for Testing
+# 		final_output = {}
+
+# 		test_layer_build = layer_builder("Test Layer")
+
+# 		final_output['layer_data'] = test_layer_build[0]
+
+# 		layer_id = test_layer_build[1]
+
+# 		feature_array = []
+
+# 		length_test = []
+
+# 		for polygon in target_polygons
+
+# 				poly_params = {}
+# 				poly_params['id'] = layer_id
+# 				poly_params['title'] = "TEST MOTHER FUCKER"
+# 				poly_params['description'] = "DID YOU NOT HEAR ME?"
+# 				poly_params['color'] = "#de2d26"
+# 				poly_params['zoom'] = 9
+
+# 				feature_array << feature_builder(poly_params, factory.collection([polygon]))
+
+# 		end
+
+# 		final_output['feature_data'] = feature_array
+
+# 		output.write(final_output.to_json)
+# 		output.close
+
+# 	else
+
+# 		puts "Output unclear"
+
+# 	end
+
+# end
+
+
+
+# puts "\a"
+# puts "\a"
+# puts "\a"
 
 
 

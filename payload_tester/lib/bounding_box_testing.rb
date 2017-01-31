@@ -6,6 +6,34 @@ require 'pry'
 
 
 
+class BBox_Test
+
+	
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Filtering out holes that are too small
 def hole_filtering(minimum_hole_size, polygon, factory)
 	# If holes
@@ -48,6 +76,7 @@ end
 def average(array)
 	average = array.inject \
 			{ |sum, el| sum + el }.to_f / array.length.to_f
+	return average
 end
 
 
